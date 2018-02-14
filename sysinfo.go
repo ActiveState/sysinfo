@@ -3,45 +3,44 @@ package sysinfo
 import "runtime"
 
 // Mainly for testing.
-var osNameOverride, osVersionOverride, osArchitectureOverride, osLibcOverride, osCompilerOverride string
+var nameOverride, versionOverride, architectureOverride, libcOverride, compilerOverride string
 
-// OSName returns the name of the current OS (e.g. "linux", "windows", etc.)
-func OSName() string {
-	if osNameOverride != "" {
-		return osNameOverride
+// Name returns the system's name (e.g. "linux", "windows", etc.)
+func Name() string {
+	if nameOverride != "" {
+		return nameOverride
 	}
 	return runtime.GOOS
 }
 
-// OSVersion returns the current OS version.
-func OSVersion() string {
-	if osVersionOverride != "" {
-		return osVersionOverride
+// Version returns the system's version.
+func Version() string {
+	if versionOverride != "" {
+		return versionOverride
 	}
 	return "" // TODO
 }
 
-// OSArchitecture returns the current OS architecture (e.g. "amd64", "386",
-// etc.).
-func OSArchitecture() string {
-	if osArchitectureOverride != "" {
-		return osArchitectureOverride
+// Architecture returns the system's architecture (e.g. "amd64", "386", etc.).
+func Architecture() string {
+	if architectureOverride != "" {
+		return architectureOverride
 	}
 	return runtime.GOARCH
 }
 
-// OSLibc returns the current OS's libc (e.g. glibc, msvc, etc.) version.
-func OSLibc() string {
-	if osLibcOverride != "" {
-		return osLibcOverride
+// Libc returns the system's libc (e.g. glibc, msvc, etc.) version.
+func Libc() string {
+	if libcOverride != "" {
+		return libcOverride
 	}
 	return "" // TODO
 }
 
-// OSCompiler returns the current OS's compiler (e.g. gcc, msvc, etc.) version.
-func OSCompiler() string {
-	if osCompilerOverride != "" {
-		return osCompilerOverride
+// Compiler returns the system's compiler (e.g. gcc, msvc, etc.) version.
+func Compiler() string {
+	if compilerOverride != "" {
+		return compilerOverride
 	}
 	return "" // TODO
 }

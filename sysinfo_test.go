@@ -6,32 +6,32 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestOSName(t *testing.T) {
-	osNameOverride = "linux"
-	assert.Equal(t, "linux", OSName())
-	osNameOverride = "" // reset
+func TestName(t *testing.T) {
+	nameOverride = "linux"
+	assert.Equal(t, "linux", Name())
+	nameOverride = "" // reset
 }
 
-func TestOSVersion(t *testing.T) {
-	osVersionOverride = "4.0"
-	assert.Equal(t, "4.0", OSVersion())
-	osVersionOverride = "" // reset
+func TestVersion(t *testing.T) {
+	versionOverride = "4.0"
+	assert.Equal(t, "4.0", Version())
+	versionOverride = "" // reset
 }
 
-func TestOSArchitecture(t *testing.T) {
-	osArchitectureOverride = "amd64"
-	assert.Equal(t, "amd64", OSArchitecture())
-	osArchitectureOverride = "" // reset
+func TestArchitecture(t *testing.T) {
+	architectureOverride = "amd64"
+	assert.Equal(t, "amd64", Architecture())
+	architectureOverride = "" // reset
 }
 
-func TestOSLibc(t *testing.T) {
-	osLibcOverride = "glibc-2.25"
-	assert.Equal(t, "glibc-2.25", OSLibc())
-	osLibcOverride = "" // reset
+func TestLibc(t *testing.T) {
+	libcOverride = "glibc-2.25"
+	assert.Equal(t, "glibc-2.25", Libc())
+	libcOverride = "" // reset
 }
 
 func TestCompiler(t *testing.T) {
-	osCompilerOverride = "gcc-7"
-	assert.Equal(t, "gcc-7", OSCompiler())
-	osCompilerOverride = "" // reset
+	compilerOverride = "gcc-7"
+	assert.Equal(t, "gcc-7", Compiler())
+	compilerOverride = "" // reset
 }
