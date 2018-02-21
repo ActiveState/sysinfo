@@ -24,6 +24,8 @@ func TestArchitecture(t *testing.T) {
 	architectureOverride = "amd64"
 	assert.Equal(t, "amd64", Architecture())
 	architectureOverride = "" // reset
+
+	assert.NotEmpty(t, Architecture(), "Architecture is detected")
 }
 
 func TestLibc(t *testing.T) {

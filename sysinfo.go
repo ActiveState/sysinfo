@@ -5,6 +5,7 @@ import (
 	"log"
 	"os/exec"
 	"runtime"
+	"strings"
 	"syscall"
 )
 
@@ -45,9 +46,8 @@ func OSVersion() string {
 		}
 		version, _, _ := proc.Call()
 		return fmt.Sprintf("%d.%d.%d", byte(version), uint8(version>>8), uint16(version>>16))
-	} else {
-		log.Printf("OSVersion: unsupported OS '%s'", os)
 	}
+	log.Printf("OSVersion: unsupported OS '%s'", os)
 	return ""
 }
 
@@ -56,7 +56,35 @@ func Architecture() string {
 	if architectureOverride != "" {
 		return architectureOverride
 	}
-	return runtime.GOARCH
+	os := OS()
+	if os == "linux" {
+		archBytes, err := exec.Command("uname", "-m").Output()
+		if err != nil {
+			log.Printf("Architecture: unable to run 'uname -m': %s", err)
+			return ""
+		}
+		arch := string(archBytes)
+		if strings.HasSuffix(arch, "64") {
+			return "amd64"
+		} else if strings.HasPrefix(arch, "i") {
+			return "386"
+		} else if strings.HasPrefix(arch, "arm") {
+			return "arm"
+		}
+		log.Printf("Architecture: unknown architecture '%s'", arch)
+		return ""
+	} else if os == "windows" {
+		// Development on Windows is either amd64 or 386.
+		// Use a trick suggested on the golang-nuts mailing list to get integer
+		// size.
+		const intSize = 32 + int(^uintptr(0)>>63<<5)
+		if intSize == 64 {
+			return "amd64"
+		}
+		return "386"
+	}
+	log.Printf("Architecture: unsupported OS '%s'", os)
+	return ""
 }
 
 // Libc returns the system's libc (e.g. glibc, msvc, etc.) version.
