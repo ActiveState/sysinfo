@@ -16,6 +16,8 @@ func TestOSVersion(t *testing.T) {
 	osVersionOverride = "4.0"
 	assert.Equal(t, "4.0", OSVersion())
 	osVersionOverride = "" // reset
+
+	assert.NotEmpty(t, OSVersion(), "OS version is detected")
 }
 
 func TestArchitecture(t *testing.T) {
