@@ -18,7 +18,7 @@ func OSVersion() (OSVersionInfo, error) {
 	// Fetch kernel version.
 	version, err := exec.Command("uname", "-r").Output()
 	if err != nil {
-		return OSVersionInfo{}, fmt.Errorf("Unable to determins OS version: %s", err)
+		return OSVersionInfo{}, fmt.Errorf("Unable to determine OS version: %s", err)
 	}
 	version = bytes.TrimSpace(version)
 	// Parse kernel version parts.
@@ -41,7 +41,6 @@ func OSVersion() (OSVersionInfo, error) {
 	if err == nil && len(bytes.Split(name, []byte(":"))) > 1 {
 		name = bytes.TrimSpace(bytes.SplitN(name, []byte(":"), 2)[1])
 	} else {
-		// TODO: handle distributions that do not support lsb_release.
 		name = []byte("Unknown")
 	}
 	return OSVersionInfo{string(version), major, minor, micro, string(name)}, nil
@@ -52,7 +51,6 @@ func Libc() (LibcInfo, error) {
 	// Assume glibc for now, which exposes a "getconf" command.
 	libc, err := exec.Command("getconf", "GNU_LIBC_VERSION").Output()
 	if err != nil {
-		// TODO: support other libc (e.g. musl).
 		return LibcInfo{}, fmt.Errorf("Unable to fetch glibc version: %s", err)
 	}
 	regex := regexp.MustCompile("(\\d+)\\D(\\d+)")
@@ -70,10 +68,16 @@ func Libc() (LibcInfo, error) {
 	return LibcInfo{Glibc, major, minor}, nil
 }
 
-// Tests whether or not the given compiler exists and returns its major and
+// Map of compiler commands to CompilerNameInfos.
+var compilerMap = map[string]CompilerNameInfo{
+	"gcc":   Gcc,
+	"clang": Clang,
+}
+
+// Checks whether or not the given compiler exists and returns its major and
 // minor version numbers. A major return of 0 indicates the compiler does not
 // exist, or that an error occurred.
-func testCompiler(name string) (int, int, error) {
+func getCompilerVersion(name string) (int, int, error) {
 	cc, err := exec.Command(name, "--version").Output()
 	if err == nil {
 		regex := regexp.MustCompile("(\\d+)\\D(\\d+)\\D\\d+")
@@ -97,21 +101,14 @@ func testCompiler(name string) (int, int, error) {
 func Compilers() ([]CompilerInfo, error) {
 	compilers := []CompilerInfo{}
 
-	// Test for GCC.
-	major, minor, err := testCompiler("gcc")
-	if err != nil {
-		return compilers, err
-	} else if major > 0 {
-		compilers = append(compilers, CompilerInfo{Gcc, major, minor})
+	for command, nameInfo := range compilerMap {
+		major, minor, err := getCompilerVersion(command)
+		if err != nil {
+			return compilers, err
+		} else if major > 0 {
+			compilers = append(compilers, CompilerInfo{nameInfo, major, minor})
+		}
 	}
-	// Test for Clang.
-	major, minor, err = testCompiler("clang")
-	if err != nil {
-		return compilers, err
-	} else if major > 0 {
-		compilers = append(compilers, CompilerInfo{Clang, major, minor})
-	}
-	// TODO: test for other compilers.
 
 	return compilers, nil
 }

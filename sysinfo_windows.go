@@ -64,10 +64,10 @@ func OSVersion() (OSVersionInfo, error) {
 
 // Libc returns the system's C library.
 func Libc() (LibcInfo, error) {
-	return LibcInfo{Msvcrt, 0, 0}, nil // TODO:
+	return LibcInfo{Msvcrt, 0, 0}, nil
 }
 
 // Compilers returns the system's available compilers.
 func Compilers() ([]CompilerInfo, error) {
-	return []CompilerInfo{CompilerInfo{Msvc, 0, 0}}, nil // TODO:
+	return []CompilerInfo{CompilerInfo{Msvc, 0, 0}}, nil
 }
