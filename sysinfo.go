@@ -14,6 +14,19 @@ const (
 	UnknownOs
 )
 
+func (i OsInfo) String() string {
+	switch i {
+	case Linux:
+		return "Linux"
+	case Windows:
+		return "Windows"
+	case Mac:
+		return "MacOS"
+	default:
+		return "Unknown"
+	}
+}
+
 // OSVersionInfo represents an OS version returned by OSVersion().
 type OSVersionInfo struct {
 	Version string // raw version string
@@ -37,6 +50,19 @@ const (
 	UnknownArch
 )
 
+func (i ArchInfo) String() string {
+	switch i {
+	case I386:
+		return "i386"
+	case Amd64:
+		return "x86_64"
+	case Arm:
+		return "ARM"
+	default:
+		return "Unknown"
+	}
+}
+
 // LibcNameInfo represents a C library name.
 type LibcNameInfo int
 
@@ -48,6 +74,17 @@ const (
 	// UnknownLibc represents an unknown C library.
 	UnknownLibc
 )
+
+func (i LibcNameInfo) String() string {
+	switch i {
+	case Glibc:
+		return "glibc"
+	case Msvcrt:
+		return "msvcrt"
+	default:
+		return "Unknown"
+	}
+}
 
 // LibcInfo represents a LibC returned by Libc().
 type LibcInfo struct {
@@ -71,6 +108,23 @@ const (
 	// Cygwin represents the Cygwin toolchain.
 	Cygwin
 )
+
+func (i CompilerNameInfo) String() string {
+	switch i {
+	case Gcc:
+		return "GCC"
+	case Clang:
+		return "clang"
+	case Msvc:
+		return "MSVC"
+	case Mingw:
+		return "MinGW"
+	case Cygwin:
+		return "Cygwin"
+	default:
+		return "Unknown"
+	}
+}
 
 // CompilerInfo represents a compiler toolchain returned by Compiler().
 type CompilerInfo struct {
