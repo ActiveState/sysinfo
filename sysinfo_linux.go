@@ -3,6 +3,7 @@ package sysinfo
 import (
 	"bytes"
 	"fmt"
+	"io/ioutil"
 	"os/exec"
 	"regexp"
 	"strconv"
@@ -41,7 +42,21 @@ func OSVersion() (OSVersionInfo, error) {
 	if err == nil && len(bytes.Split(name, []byte(":"))) > 1 {
 		name = bytes.TrimSpace(bytes.SplitN(name, []byte(":"), 2)[1])
 	} else {
-		name = []byte("Unknown")
+		etcFiles := []string{
+			"/etc/debian_version", // Debians
+			"/etc/redhat-release", // RHELs and Fedoras
+			"/etc/system-release", // Amazon AMIs
+			"/etc/SuSE-release",   // SuSEs
+		}
+		for _, etcFile := range etcFiles {
+			name, err = ioutil.ReadFile(etcFile)
+			if err == nil {
+				break
+			}
+		}
+		if bytes.Equal(name, []byte("")) {
+			name = []byte("Unknown")
+		}
 	}
 	return OSVersionInfo{string(version), major, minor, micro, string(name)}, nil
 }
