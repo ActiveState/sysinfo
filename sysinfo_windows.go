@@ -67,7 +67,23 @@ func Libc() (LibcInfo, error) {
 	return LibcInfo{Msvcrt, 0, 0}, nil
 }
 
+// Map of compiler commands to CompilerNameInfos.
+var compilerMap = map[string]CompilerNameInfo{
+	"cl": Msvc,
+}
+
 // Compilers returns the system's available compilers.
 func Compilers() ([]CompilerInfo, error) {
-	return []CompilerInfo{CompilerInfo{Msvc, 0, 0}}, nil
+	compilers := []CompilerInfo{}
+
+	for command, nameInfo := range compilerMap {
+		major, minor, err := getCompilerVersion([]string{command})
+		if err != nil {
+			return compilers, err
+		} else if major > 0 {
+			compilers = append(compilers, CompilerInfo{nameInfo, major, minor})
+		}
+	}
+
+	return compilers, nil
 }

@@ -3,7 +3,6 @@ package sysinfo
 import (
 	"bytes"
 	"fmt"
-	"io/ioutil"
 	"os/exec"
 	"regexp"
 	"strconv"
@@ -11,18 +10,18 @@ import (
 
 // OS returns the system's OS
 func OS() OsInfo {
-	return Linux
+	return Mac
 }
 
 // OSVersion returns the system's OS version.
 func OSVersion() (OSVersionInfo, error) {
-	// Fetch kernel version.
-	version, err := exec.Command("uname", "-r").Output()
+	// Fetch OS version.
+	version, err := exec.Command("sw_vers", "-productVersion").Output()
 	if err != nil {
 		return OSVersionInfo{}, fmt.Errorf("Unable to determine OS version: %s", err)
 	}
 	version = bytes.TrimSpace(version)
-	// Parse kernel version parts.
+	// Parse OS version parts.
 	regex := regexp.MustCompile("^(\\d+)\\D(\\d+)\\D(\\d+)")
 	parts := regex.FindStringSubmatch(string(version))
 	if len(parts) != 4 {
@@ -36,40 +35,19 @@ func OSVersion() (OSVersionInfo, error) {
 	major, _ := strconv.Atoi(parts[1])
 	minor, _ := strconv.Atoi(parts[2])
 	micro, _ := strconv.Atoi(parts[3])
-	// Fetch distribution name.
-	// lsb_release -d returns output of the form "Description:\t[Name]".
-	name, err := exec.Command("lsb_release", "-d").Output()
-	if err == nil && len(bytes.Split(name, []byte(":"))) > 1 {
-		name = bytes.TrimSpace(bytes.SplitN(name, []byte(":"), 2)[1])
-	} else {
-		etcFiles := []string{
-			"/etc/debian_version", // Debians
-			"/etc/redhat-release", // RHELs and Fedoras
-			"/etc/system-release", // Amazon AMIs
-			"/etc/SuSE-release",   // SuSEs
-		}
-		for _, etcFile := range etcFiles {
-			name, err = ioutil.ReadFile(etcFile)
-			if err == nil {
-				break
-			}
-		}
-		if bytes.Equal(name, []byte("")) {
-			name = []byte("Unknown")
-		}
-	}
+	// Fetch OS name.
+	name, err := exec.Command("sw_vers", "-productName").Output()
 	return OSVersionInfo{string(version), major, minor, micro, string(name)}, nil
 }
 
 // Libc returns the system's C library.
 func Libc() (LibcInfo, error) {
-	// Assume glibc for now, which exposes a "getconf" command.
-	libc, err := exec.Command("getconf", "GNU_LIBC_VERSION").Output()
+	version, err := exec.Command("clang", "--version")
 	if err != nil {
-		return LibcInfo{}, fmt.Errorf("Unable to fetch glibc version: %s", err)
+		return LibcInfo{}, fmt.Errorf("Unable to fetch libc version: %s", err)
 	}
 	regex := regexp.MustCompile("(\\d+)\\D(\\d+)")
-	parts := regex.FindStringSubmatch(string(libc))
+	parts := regex.FindStringSubmatch(string(version))
 	if len(parts) != 3 {
 		return LibcInfo{}, fmt.Errorf("Unable to parse libc string '%s'", libc)
 	}
@@ -80,26 +58,17 @@ func Libc() (LibcInfo, error) {
 	}
 	major, _ := strconv.Atoi(parts[1])
 	minor, _ := strconv.Atoi(parts[2])
-	return LibcInfo{Glibc, major, minor}, nil
-}
-
-// Map of compiler commands to CompilerNameInfos.
-var compilerMap = map[string]CompilerNameInfo{
-	"gcc":   Gcc,
-	"clang": Clang,
+	return LibcInfo{BsdLibc, major, minor}, nil
 }
 
 // Compilers returns the system's available compilers.
 func Compilers() ([]CompilerInfo, error) {
 	compilers := []CompilerInfo{}
-
-	for command, nameInfo := range compilerMap {
-		major, minor, err := getCompilerVersion([]string{command, "--version"})
-		if err != nil {
-			return compilers, err
-		} else if major > 0 {
-			compilers = append(compilers, CompilerInfo{nameInfo, major, minor})
-		}
+	major, minor, err := getCompilerVersion([]string{"clang", "--version"})
+	if err != nil {
+		return compilers, err
+	} else if major > 0 {
+		compilers = append(compilers, CompilerInfo{nameInfo, major, minor})
 	}
 
 	return compilers, nil
