@@ -71,7 +71,7 @@ func Compilers() ([]CompilerInfo, error) {
 	compilers := []CompilerInfo{}
 
 	for command, nameInfo := range compilerMap {
-		major, minor, err := getCompilerVersion([]string{command})
+		major, minor, err := getCompilerVersion([]string{command, "--version"})
 		if err != nil {
 			return compilers, err
 		} else if major > 0 {
