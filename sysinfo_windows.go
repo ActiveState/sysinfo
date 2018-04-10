@@ -84,12 +84,13 @@ func Compilers() ([]*CompilerInfo, error) {
 		// This registry technique works for all MSVC prior to 15.0 (VS2017).
 		if valueNames, err := key.ReadValueNames(0); err == nil {
 			for _, name := range valueNames {
-				if _, err := strconv.ParseFloat(name, 32); err == nil {
-					path, _, err := key.GetStringValue(name)
-					cl := filepath.Join(path, "VC", "bin", "cl.exe")
-					if _, err = os.Stat(cl); err == nil {
-						compilerMap[cl] = Msvc
-					}
+				if _, err := strconv.ParseFloat(name, 32); err != nil {
+					continue
+				}
+				path, _, err := key.GetStringValue(name)
+				cl := filepath.Join(path, "VC", "bin", "cl.exe")
+				if _, err = os.Stat(cl); err == nil {
+					compilerMap[cl] = Msvc
 				}
 			}
 		}
