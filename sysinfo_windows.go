@@ -40,15 +40,8 @@ var versions = map[int]map[int]string{
 
 // OSVersion returns the system's OS version.
 func OSVersion() (*OSVersionInfo, error) {
-	dll, err := windows.LoadDLL("kernel32.dll")
-	if err != nil {
-		return nil, errors.New("cannot find 'kernel32.dll'")
-	}
-	proc, err := dll.FindProc("GetVersion")
-	if err != nil {
-		return nil, errors.New("cannot find 'GetVersion' in 'kernel32.dll'")
-	}
-	version, _, _ := proc.Call()
+	dll := windows.NewLazySystemDLL("kernel32.dll")
+	version, _, _ := dll.NewProc("GetVersion").Call()
 	major := int(byte(version))
 	minor := int(uint8(version >> 8))
 	micro := int(uint16(version >> 16))
