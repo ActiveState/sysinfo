@@ -70,7 +70,7 @@ func Libc() (*LibcInfo, error) {
 	// patience.
 	windir := os.Getenv("SYSTEMROOT")
 	if windir == "" {
-		return nil, errors.New("Unable to find system root")
+		return nil, errors.New("Unable to find system root; %SYSTEMROOT% undefined")
 	}
 	msvcrt := filepath.Join(windir, "System32", "msvcrt.dll")
 	if _, err := os.Stat(msvcrt); err != nil {
