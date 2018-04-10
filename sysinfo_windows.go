@@ -3,8 +3,12 @@ package sysinfo
 import (
 	"errors"
 	"fmt"
+	"os"
+	"path/filepath"
+	"strconv"
 
 	"golang.org/x/sys/windows"
+	"golang.org/x/sys/windows/registry"
 )
 
 // OS returns the system's OS
@@ -73,8 +77,22 @@ func Compilers() ([]*CompilerInfo, error) {
 
 	// Map of compiler commands to CompilerNameInfos.
 	var compilerMap = map[string]CompilerNameInfo{
-		"cl.exe":  Msvc,
 		"gcc.exe": Mingw,
+	}
+	// Search for MSVC locations and add their C++ compilers to the map.
+	if key, err := registry.OpenKey(registry.LOCAL_MACHINE, "Software\\Wow6432Node\\Microsoft\\VisualStudio\\SxS\\VS7", registry.QUERY_VALUE); err == nil {
+		// This registry technique works for all MSVC prior to 15.0 (VS2017).
+		if valueNames, err := key.ReadValueNames(0); err == nil {
+			for _, name := range valueNames {
+				if _, err := strconv.ParseFloat(name, 32); err == nil {
+					path, _, err := key.GetStringValue(name)
+					cl := filepath.Join(path, "VC", "bin", "cl.exe")
+					if _, err = os.Stat(cl); err == nil {
+						compilerMap[cl] = Msvc
+					}
+				}
+			}
+		}
 	}
 	for command, nameInfo := range compilerMap {
 		major, minor, err := getCompilerVersion([]string{command})
