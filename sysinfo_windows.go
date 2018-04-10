@@ -73,7 +73,8 @@ func Compilers() ([]*CompilerInfo, error) {
 
 	// Map of compiler commands to CompilerNameInfos.
 	var compilerMap = map[string]CompilerNameInfo{
-		"cl": Msvc,
+		"cl.exe":  Msvc,
+		"gcc.exe": Mingw,
 	}
 	for command, nameInfo := range compilerMap {
 		major, minor, err := getCompilerVersion([]string{command})
