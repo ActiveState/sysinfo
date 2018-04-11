@@ -4,7 +4,9 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
+	"regexp"
 	"strconv"
 
 	"golang.org/x/sys/windows"
@@ -39,15 +41,8 @@ var versions = map[int]map[int]string{
 
 // OSVersion returns the system's OS version.
 func OSVersion() (*OSVersionInfo, error) {
-	dll, err := windows.LoadDLL("kernel32.dll")
-	if err != nil {
-		return nil, errors.New("cannot find 'kernel32.dll'")
-	}
-	proc, err := dll.FindProc("GetVersion")
-	if err != nil {
-		return nil, errors.New("cannot find 'GetVersion' in 'kernel32.dll'")
-	}
-	version, _, _ := proc.Call()
+	dll := windows.NewLazySystemDLL("kernel32.dll")
+	version, _, _ := dll.NewProc("GetVersion").Call()
 	major := int(byte(version))
 	minor := int(uint8(version >> 8))
 	micro := int(uint16(version >> 16))
@@ -68,7 +63,32 @@ func OSVersion() (*OSVersionInfo, error) {
 
 // Libc returns the system's C library.
 func Libc() (*LibcInfo, error) {
-	return &LibcInfo{Msvcrt, 0, 0}, nil
+	// Use Windows powershell in order to query the version information from
+	// msvcrt.dll. This works on Windows 7 and higher.
+	// Note: cannot easily use version.dll's GetFileVersionInfo function since its
+	// return value is a pointer and VerQueryValue is needed in order to fetch a C
+	// struct with version info. Manipulating C structs with Go is an exercise in
+	// patience.
+	windir := os.Getenv("SYSTEMROOT")
+	if windir == "" {
+		return nil, errors.New("Unable to find system root; %SYSTEMROOT% undefined")
+	}
+	msvcrt := filepath.Join(windir, "System32", "msvcrt.dll")
+	if _, err := os.Stat(msvcrt); err != nil {
+		return nil, nil // no libc found
+	}
+	versionInfo, err := exec.Command("powershell", "-command", "(Get-Item "+msvcrt+").VersionInfo").Output()
+	if err != nil {
+		return nil, fmt.Errorf("Unable to determine libc version: %s", err)
+	}
+	regex := regexp.MustCompile("(\\d+)\\D(\\d+)")
+	parts := regex.FindStringSubmatch(string(versionInfo))
+	if len(parts) != 3 {
+		return nil, fmt.Errorf("Unable to parse versionInfo string '%s'", versionInfo)
+	}
+	major, _ := strconv.Atoi(parts[1])
+	minor, _ := strconv.Atoi(parts[2])
+	return &LibcInfo{Msvcrt, major, minor}, nil
 }
 
 // Compilers returns the system's available compilers.
