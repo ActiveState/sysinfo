@@ -22,30 +22,29 @@ func OSVersion() (*OSVersionInfo, error) {
 	}
 	version = bytes.TrimSpace(version)
 	// Parse OS version parts.
-  regex := regexp.MustCompile("^(\\d+)\\D(\\d+)(?:\\D(\\d+))?")
+	regex := regexp.MustCompile("^(\\d+)\\D(\\d+)(?:\\D(\\d+))?")
 	parts := regex.FindStringSubmatch(string(version))
-	fmt.Printf("PARTS=%+q\n", parts)
 	if len(parts) != 4 {
 		return nil, fmt.Errorf("Unable to parse version string '%s'", version)
 	}
 
 	major, err := strconv.Atoi(parts[1])
 	if err != nil {
-    return nil, fmt.Errorf("Unable to parse part '%s' of version string '%s'", parts[1], version)
+		return nil, fmt.Errorf("Unable to parse part '%s' of version string '%s'", parts[1], version)
 	}
 
 	minor, err := strconv.Atoi(parts[2])
 	if err != nil {
-    return nil, fmt.Errorf("Unable to parse part '%s' of version string '%s'", parts[2], version)
+		return nil, fmt.Errorf("Unable to parse part '%s' of version string '%s'", parts[2], version)
 	}
 
-  var micro int = 0
-  if parts[3] != "" {
-    micro, err = strconv.Atoi(parts[3])
-    if err != nil {
+	var micro int = 0
+	if parts[3] != "" {
+		micro, err = strconv.Atoi(parts[3])
+		if err != nil {
 			return nil, fmt.Errorf("Unable to parse part '%s' of version string '%s'", parts[3], version)
-    }
-  }
+		}
+	}
 	// Fetch OS name.
 	name, err := exec.Command("sw_vers", "-productName").Output()
 	return &OSVersionInfo{string(version), major, minor, micro, string(name)}, nil
