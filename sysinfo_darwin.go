@@ -24,7 +24,7 @@ func OSVersion() (*OSVersionInfo, error) {
 	// Parse OS version parts.
 	regex := regexp.MustCompile("^(\\d+)\\D(\\d+)(?:\\D(\\d+))?")
 	parts := regex.FindStringSubmatch(string(version))
-	if len(parts) != 4 {
+	if len(parts) == 0 {
 		return nil, fmt.Errorf("Unable to parse version string '%s'", version)
 	}
 
