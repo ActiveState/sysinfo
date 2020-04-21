@@ -35,7 +35,7 @@ func OSVersion() (*OSVersionInfo, error) {
 	// Parse kernel version parts.
 	versionParts := versionRegex.FindStringSubmatch(version)
 	if len(versionParts) != 4 {
-		return nil, fmt.Errorf("Unable to parse version string '%s'", versionParts)
+		return nil, fmt.Errorf("Unable to parse version string %q", versionParts)
 	}
 	major, _ := strconv.Atoi(versionParts[1])
 	minor, _ := strconv.Atoi(versionParts[2])
