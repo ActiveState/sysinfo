@@ -28,7 +28,7 @@ func OSVersion() (*OSVersionInfo, error) {
 	}
 	procVersionParts := procVersRegex.FindSubmatch(procVersion)
 	if len(procVersionParts) != 2 {
-		return nil, fmt.Errorf("Unable to parse version string %q", procVersion)
+		return nil, fmt.Errorf("Unable to parse /proc/version string %q", procVersion)
 	}
 	version := string(procVersionParts[1])
 
