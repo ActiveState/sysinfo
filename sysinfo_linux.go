@@ -14,6 +14,10 @@ func OS() OsInfo {
 	return Linux
 }
 
+var (
+	versionRegex = regexp.MustCompile(`^(\d+)\D(\d+)\D(\d+)`)
+)
+
 // OSVersion returns the system's OS version.
 func OSVersion() (*OSVersionInfo, error) {
 	// Fetch kernel version.
@@ -23,8 +27,7 @@ func OSVersion() (*OSVersionInfo, error) {
 	}
 	version = bytes.TrimSpace(version)
 	// Parse kernel version parts.
-	regex := regexp.MustCompile("^(\\d+)\\D(\\d+)\\D(\\d+)")
-	parts := regex.FindStringSubmatch(string(version))
+	parts := versionRegex.FindStringSubmatch(string(version))
 	if len(parts) != 4 {
 		return nil, fmt.Errorf("Unable to parse version string '%s'", version)
 	}
