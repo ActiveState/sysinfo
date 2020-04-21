@@ -15,22 +15,18 @@ func OS() OsInfo {
 }
 
 var (
-	procVersRegex = regexp.MustCompile(`Linux version ([0-9.-]{3,}-?\w*)`)
-	versionRegex  = regexp.MustCompile(`^(\d+)\D(\d+)\D(\d+)`)
+	versionRegex = regexp.MustCompile(`^(\d+)\D(\d+)\D(\d+)`)
 )
 
 // OSVersion returns the system's OS version.
 func OSVersion() (*OSVersionInfo, error) {
 	// Fetch kernel version.
-	procVersion, err := ioutil.ReadFile("/proc/version")
+	osrelFile := "/proc/sys/kernel/osrelease"
+	osrelData, err := ioutil.ReadFile(osrelFile)
 	if err != nil {
-		return nil, fmt.Errorf("Unable to read /proc/version: %s", err)
+		return nil, fmt.Errorf("Unable to read %s: %v", osrelFile, err)
 	}
-	procVersionParts := procVersRegex.FindSubmatch(procVersion)
-	if len(procVersionParts) != 2 {
-		return nil, fmt.Errorf("Unable to parse /proc/version string %q", procVersion)
-	}
-	version := string(procVersionParts[1])
+	version := string(bytes.TrimSpace(osrelData))
 
 	// Parse kernel version parts.
 	versionParts := versionRegex.FindStringSubmatch(version)
