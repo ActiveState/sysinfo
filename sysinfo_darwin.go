@@ -96,21 +96,19 @@ func Compilers() ([]*CompilerInfo, error) {
 
 func getDarwinProductVersion() (string, error) {
 	version, err := exec.Command("sw_vers", "-productVersion").Output()
-	if err != nil {
-		swversErr := err
+	if err == nil {
+		return string(bytes.TrimSpace(version)), nil
+	}
+	swversErr := err
 
-		plistBuddyArgs := []string{
-			"-c",
-			"Print:ProductVersion",
-			"/System/Library/CoreServices/SystemVersion.plist",
-		}
-		version, err = exec.Command("/usr/libexec/PlistBuddy", plistBuddyArgs...).Output()
-		if err != nil {
-			return "", KeyedMultiError{
-				"sw_vers":    swversErr,
-				"PlistBuddy": err,
-			}
-		}
+	plistBuddyArgs := []string{
+		"-c",
+		"Print:ProductVersion",
+		"/System/Library/CoreServices/SystemVersion.plist",
+	}
+	version, err = exec.Command("/usr/libexec/PlistBuddy", plistBuddyArgs...).Output()
+	if err != nil {
+		fmt.Sprintf("PlistBuddy error: %v. swver error: %v", err, swversErr)
 	}
 
 	return string(bytes.TrimSpace(version)), nil

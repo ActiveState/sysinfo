@@ -162,19 +162,3 @@ func getCompilerVersion(args []string) (int, int, error) {
 	minor, _ := strconv.Atoi(parts[2])
 	return major, minor, nil
 }
-
-type KeyedMultiError map[string]error
-
-func (es KeyedMultiError) Error() string {
-	msg := "[ "
-	var sep string
-
-	for name, err := range es {
-		msg += fmt.Sprintf("%s%s: %v", sep, name, err.Error())
-		sep = " | "
-	}
-
-	msg += " ]"
-
-	return msg
-}
