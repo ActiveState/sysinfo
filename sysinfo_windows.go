@@ -39,7 +39,7 @@ var versions = map[int]map[int]string{
 	},
 }
 
-func winVersionName(major, minor, micro int) string {
+func winVersionName(major, minor int) string {
 	name := "Unknown"
 	if subversions, ok := versions[major]; ok {
 		if value, ok := subversions[minor]; ok {
@@ -55,31 +55,31 @@ func newOSVersionInfo(major, minor, micro int) *OSVersionInfo {
 		major,
 		minor,
 		micro,
-		winVersionName(major, minor, micro),
+		winVersionName(major, minor),
 	}
 }
 
 // OSVersion returns the system's OS version.
 func OSVersion() (*OSVersionInfo, error) {
-	major, minor, micro, err := getWindowsVersionFromRegistry()
+	osvi, err := newOSVersionInfoFromRegistry()
 	if err == nil {
-		return newOSVersionInfo(major, minor, micro), nil
+		return osvi, nil
 	}
 	regErr := err
 
-	major, minor, micro, err = getWindowsVersionFromDLL()
+	osvi, err = newOSVersionInfoFromDLL()
 	if err != nil {
-		fmt.Sprintf("From DLL error: %v. From Registry error: %v", err, regErr)
+		return nil, fmt.Errorf("From DLL error: %v. From Registry error: %v", err, regErr)
 	}
 
-	return newOSVersionInfo(major, minor, micro), nil
+	return osvi, nil
 }
 
-func getWindowsVersionFromRegistry() (major, minor, micro int, err error) {
+func newOSVersionInfoFromRegistry() (*OSVersionInfo, error) {
 	keyName := `SOFTWARE\Microsoft\Windows NT\CurrentVersion`
 	key, err := registry.OpenKey(registry.LOCAL_MACHINE, keyName, registry.QUERY_VALUE)
 	if err != nil {
-		return 0, 0, 0, fmt.Errorf("Cannot open registry key %q: %w", keyName, err)
+		return nil, fmt.Errorf("Cannot open registry key %q: %w", keyName, err)
 	}
 	defer key.Close()
 
@@ -88,43 +88,41 @@ func getWindowsVersionFromRegistry() (major, minor, micro int, err error) {
 	majorEntryName := "CurrentMajorVersionNumber"
 	major64, _, err := key.GetIntegerValue(majorEntryName)
 	if err != nil {
-		return 0, 0, 0, fmt.Errorf(keyEntryErrMsgFmt, majorEntryName, keyName, err)
+		return nil, fmt.Errorf(keyEntryErrMsgFmt, majorEntryName, keyName, err)
 	}
-	major = int(major64)
 
 	minorEntryName := "CurrentMinorVersionNumber"
 	minor64, _, err := key.GetIntegerValue(minorEntryName)
 	if err != nil {
-		return major, 0, 0, fmt.Errorf(keyEntryErrMsgFmt, minorEntryName, keyName, err)
+		return nil, fmt.Errorf(keyEntryErrMsgFmt, minorEntryName, keyName, err)
 	}
-	minor = int(minor64)
 
 	microEntryName := "CurrentBuild"
 	microText, _, err := key.GetStringValue(microEntryName)
 	if err != nil {
-		return major, minor, 0, fmt.Errorf(keyEntryErrMsgFmt, microEntryName, keyName, err)
+		return nil, fmt.Errorf(keyEntryErrMsgFmt, microEntryName, keyName, err)
 	}
-	micro, err = strconv.Atoi(microText)
+	micro, err := strconv.Atoi(microText)
 	if err != nil {
 		atoiErr := fmt.Errorf("Cannot convert %q text to integer: %w", microEntryName, err)
-		return major, minor, 0, atoiErr
+		return nil, atoiErr
 	}
 
-	return major, minor, micro, nil
+	return newOSVersionInfo(int(major64), int(minor64), micro), nil
 }
 
-func getWindowsVersionFromDLL() (major, minor, micro int, err error) {
+func newOSVersionInfoFromDLL() (*OSVersionInfo, error) {
 	dll := windows.NewLazySystemDLL("kernel32.dll")
 	version, _, err := dll.NewProc("GetVersion").Call()
 	if err != nil {
-		return 0, 0, 0, fmt.Errorf("'GetVersion' via kernel32.dll failed: %w")
+		return nil, fmt.Errorf("'GetVersion' via kernel32.dll failed: %w")
 	}
 
-	major = int(byte(version))
-	minor = int(uint8(version >> 8))
-	micro = int(uint16(version >> 16))
+	major := int(byte(version))
+	minor := int(uint8(version >> 8))
+	micro := int(uint16(version >> 16))
 
-	return major, minor, micro, nil
+	return newOSVersionInfo(major, minor, micro), nil
 }
 
 // Libc returns the system's C library.
