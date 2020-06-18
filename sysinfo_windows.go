@@ -102,7 +102,7 @@ func newOSVersionInfoFromRegistry() (*OSVersionInfo, error) {
 		}
 	}
 
-	if ! hasVersionInfo || true {
+	if ! hasVersionInfo {
 		return newOSVersionInfoFromLegacyRegistry(key)
 	}
 
